@@ -9,15 +9,23 @@
 import Foundation
 
 public class FailablePromise<T> : FailablePromiseProtocol {
-    public init<X: FailablePromiseProtocol>(_ promise: X) where X.T == T {
-        self.subscribe_ = { handler in
-            promise.subscribe(handler: handler)
-        }
+    public convenience init(error: Error) {
+        self.init(FailablePromiseImpl(error: error))
     }
     
-    public func subscribe(handler: @escaping Handler<FailableBox<T>>) -> Disposer {
-        return subscribe_(handler)
+    public init<X: FailablePromiseProtocol>(_ promise: X) where X.T == T {
+        subscribe_ = { promise.subscribe(subscriber: $0) }
+        unsubscribeAll_ = { promise.unsubscribeAll() }
+    }
+    
+    public func subscribe(subscriber: @escaping Handler<FailableBox<T>>) -> Disposer {
+        return subscribe_(subscriber)
+    }
+    
+    public func unsubscribeAll() {
+        unsubscribeAll_()
     }
     
     private let subscribe_: (@escaping Handler<FailableBox<T>>) -> Disposer
+    private let unsubscribeAll_: () -> Void
 }

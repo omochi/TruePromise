@@ -9,8 +9,18 @@
 import Foundation
 
 public class FailablePromiseImpl<T> : FailablePromiseProtocol {
-    public func subscribe(handler: @escaping Handler<FailableBox<T>>) -> Disposer {
-        return inner.subscribe(handler: handler)
+    public init() {}
+    
+    public init(error: Error) {
+        inner.resolve(value: FailableBox<T>(error: error))
+    }
+    
+    public func subscribe(subscriber: @escaping Handler<FailableBox<T>>) -> Disposer {
+        return inner.subscribe(subscriber: subscriber)
+    }
+    
+    public func unsubscribeAll() {
+        inner.unsubscribeAll()
     }
     
     public func resolve(value: T) {

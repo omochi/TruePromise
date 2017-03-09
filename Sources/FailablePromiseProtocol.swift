@@ -8,7 +8,7 @@
 
 import Foundation
 
-public protocol FailablePromiseProtocol : FailableSubscribable {
+public protocol FailablePromiseProtocol : FailableSubscribable, UnsubscribeAllEnable {
 }
 
 public extension FailablePromiseProtocol {
@@ -52,6 +52,43 @@ public extension FailablePromiseProtocol {
     
     public func tryFlatMap<U>(mapper: @escaping (T) throws -> FailablePromise<U>) -> FailablePromise<U> {
         return tryMap(mapper: mapper).flatten()
+    }
+    
+    public func rescue(rescue: @escaping (Error) -> T) -> Promise<T> {
+        let promise = PromiseImpl<T>()
+        
+        let _ = subscribe(
+            success: { (x: T) in
+                promise.resolve(value: x)
+        },
+            failure: { (e: Error) in
+                let x = rescue(e)
+                promise.resolve(value: x)
+        })
+        
+        return Promise<T>(promise)
+    }
+    
+    public func dispose(when: When) -> FailablePromise<T> {
+        let promise = FailablePromiseImpl<T>()
+        
+        let diposerGroup = DisposerGroup()
+        
+        let d1 = subscribe(
+            success: { (v: T) in
+                promise.resolve(value: v)
+        },
+            failure: { e in
+                promise.resolve(error: e)
+        })
+        diposerGroup.add(d1)
+        
+        let d2 = when.subscribe {
+            diposerGroup.dispose()
+        }
+        diposerGroup.add(d2)
+        
+        return FailablePromise(promise)
     }
 }
 

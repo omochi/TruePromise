@@ -8,7 +8,7 @@
 
 import Foundation
 
-public protocol PromiseProtocol : Subscribable {
+public protocol PromiseProtocol : Subscribable, UnsubscribeAllEnable {
 }
 
 public extension PromiseProtocol {
@@ -49,7 +49,7 @@ public extension PromiseProtocol {
         return tryMap(mapper: mapper).flatten()
     }
     
-    public func dispose<X : Subscribable>(when: X) -> Promise<T> {
+    public func dispose(when: When) -> Promise<T> {
         let promise = PromiseImpl<T>()
         
         let diposerGroup = DisposerGroup()
@@ -59,7 +59,7 @@ public extension PromiseProtocol {
         }
         diposerGroup.add(d1)
         
-        let d2 = when.subscribe { (w: X.T) in
+        let d2 = when.subscribe {
             diposerGroup.dispose()
         }
         diposerGroup.add(d2)

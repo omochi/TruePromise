@@ -14,15 +14,23 @@ public class Promise<T> : PromiseProtocol {
     }
     
     public init<X: PromiseProtocol>(_ promise: X) where X.T == T {
-        self.subscribe_ = { handler in
-            promise.subscribe(handler: handler)
-        }
+        subscribe_ = { promise.subscribe(subscriber: $0) }
+        unsubscribeAll_ = { promise.unsubscribeAll() }
     }
     
-    public func subscribe(handler: @escaping Handler<T>) -> Disposer {
-        return subscribe_(handler)
+    public func subscribe(subscriber: @escaping Handler<T>) -> Disposer {
+        return subscribe_(subscriber)
     }
     
+    public func unsubscribeAll() {
+        unsubscribeAll_()
+    }
+    
+    private let subscribe_: (@escaping Handler<T>) -> Disposer
+    private let unsubscribeAll_: () -> Void
+}
+
+public extension Promise {
     public static func create(
         creator: (@escaping Handler<T>) -> Void
         ) -> Promise<T> {
@@ -36,5 +44,17 @@ public class Promise<T> : PromiseProtocol {
         return Promise<T>(promise)
     }
     
-    private let subscribe_: (@escaping Handler<T>) -> Disposer
+    public static func tryCreate(
+        creator: (@escaping Handler<T>, @escaping Handler<Error>) -> Void
+        ) -> FailablePromise<T> {
+        
+        let promise = FailablePromiseImpl<T>()
+        
+        let success: Handler<T> = { promise.resolve(value: $0) }
+        let failure: Handler<Error> = { promise.resolve(error: $0) }
+        
+        creator(success, failure)
+        
+        return FailablePromise<T>(promise)
+    }
 }

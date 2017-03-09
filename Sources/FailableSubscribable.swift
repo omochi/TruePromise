@@ -11,7 +11,7 @@ import Foundation
 public protocol FailableSubscribable {
     associatedtype T
     
-    func subscribe(handler: @escaping Handler<FailableBox<T>>) -> Disposer
+    func subscribe(subscriber: @escaping Handler<FailableBox<T>>) -> Disposer
 }
 
 public extension FailableSubscribable {

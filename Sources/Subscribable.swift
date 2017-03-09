@@ -11,5 +11,11 @@ import Foundation
 public protocol Subscribable {
     associatedtype T
     
-    func subscribe(handler: @escaping Handler<T>) -> Disposer
+    func subscribe(subscriber: @escaping Handler<T>) -> Disposer
+}
+
+public extension Subscribable {
+    public func toWhen() -> When {
+        return When(self)
+    }
 }

@@ -10,17 +10,19 @@ import Foundation
 
 public class DisposerGroup {
     public func add(_ disposer: Disposer) {
-        if disposed {
-            disposer.dispose()
-        } else {
+        guard disposed else {
             disposers.append(disposer)
+            return
         }
+
+        disposer.dispose()
     }
     
     public func dispose() {
         guard !disposed else {
             return
         }
+        
         disposed = true
         let disposers = self.disposers
         self.disposers.removeAll()

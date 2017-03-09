@@ -15,17 +15,17 @@ public class PromiseImpl<T> : PromiseProtocol {
         self.value = value
     }
     
-    public func subscribe(handler: @escaping Handler<T>) -> Disposer {
+    public func subscribe(subscriber: @escaping Handler<T>) -> Disposer {
         guard let value = self.value else {
-            let box = Box(value: handler)
-            subscribers.append(box)
-            return Disposer { [weak self] in
-                self?.unsubscribe(box: box)
-            }
+            return subscribers.add(subscriber: subscriber)
         }
         
-        handler(value)
+        subscriber(value)
         return Disposer {}
+    }
+    
+    public func unsubscribeAll() {
+        subscribers.clear()
     }
     
     public func resolve(value: T) {
@@ -33,26 +33,15 @@ public class PromiseImpl<T> : PromiseProtocol {
         
         self.value = value
         
-        let subscribers = self.subscribers
-        self.subscribers.removeAll()
-        
-        for s in subscribers {
-            s.value(value)
-        }
+        let pool = subscribers.copy()
+        subscribers.clear()
+        pool.send(value: value)
     }
     
     private var resolved: Bool {
         return value != nil
     }
     
-    private func unsubscribe(box: Box<(T) -> Void>) {
-        guard let index = subscribers.index(where: { $0 === box }) else {
-            return
-        }
-        subscribers.remove(at: index)
-    }
-    
     private var value: T?
-    
-    private var subscribers: [Box<(T) -> Void>] = []
+    private let subscribers: SubscriberPool<T> = SubscriberPool()
 }
