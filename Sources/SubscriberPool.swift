@@ -11,13 +11,13 @@ import Foundation
 public class SubscriberPool<T> {
     public init() {}
     
-    public init(_ pool: SubscriberPool<T>) {
-        subscribers = pool.subscribers
-    }
-    
-    public func copy() -> SubscriberPool<T> {
-        return SubscriberPool<T>(self)
-    }
+//    public init(_ pool: SubscriberPool<T>) {
+//        subscribers = pool.subscribers
+//    }
+//    
+//    public func copy() -> SubscriberPool<T> {
+//        return SubscriberPool<T>(self)
+//    }
     
     public func add(subscriber: @escaping Handler<T>) -> Disposer {
         let box = Box(value: subscriber)
@@ -36,6 +36,7 @@ public class SubscriberPool<T> {
     }
     
     public func send(value: T) {
+        let subscribers = self.subscribers
         for x in subscribers {
             x.value(value)
         }

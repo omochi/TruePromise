@@ -33,9 +33,8 @@ public class PromiseImpl<T> : PromiseProtocol {
         
         self.value = value
         
-        let pool = subscribers.copy()
+        subscribers.send(value: value)
         subscribers.clear()
-        pool.send(value: value)
     }
     
     private var resolved: Bool {

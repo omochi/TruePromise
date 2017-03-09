@@ -8,20 +8,19 @@
 
 import Foundation
 
-public class EventEmitterImpl<T> : EventEmitterProtocol {
-    public init() {}
+public class EventEmitterImpl<T> : EventEmitter<T> {
+    public override init() {}
     
-    public func subscribe(subscriber: @escaping Handler<T>) -> Disposer {
+    public override func subscribe(subscriber: @escaping Handler<T>) -> Disposer {
         return subscribers.add(subscriber: subscriber)
     }
     
-    public func unsubscribeAll() {
+    public override func unsubscribeAll() {
         subscribers.clear()
     }
     
     public func emit(value: T) {
-        let pool = subscribers.copy()
-        pool.send(value: value)
+        subscribers.send(value: value)
     }
     
     public func emitLast(value: T) {
@@ -30,4 +29,23 @@ public class EventEmitterImpl<T> : EventEmitterProtocol {
     }
     
     private var subscribers: SubscriberPool<T> = SubscriberPool()
+}
+
+public extension EventEmitterImpl {
+    public func on(handler: @escaping Handler<T>) {
+        let _ = subscribe { (x: T) in
+            handler(x)
+        }
+    }
+    
+    public func once(handler: @escaping Handler<T>) {
+        let disposerGroup = DisposerGroup()
+        
+        let d = subscribe { (x: T) in
+            disposerGroup.dispose()
+            
+            handler(x)
+        }
+        disposerGroup.add(d)
+    }
 }
