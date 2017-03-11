@@ -1,5 +1,5 @@
 //
-//  FailableProtocol.swift
+//  FailablePromiseImpl.swift
 //  TruePromise
 //
 //  Created by omochimetaru on 2017/03/09.
@@ -9,23 +9,37 @@
 import Foundation
 
 public class FailablePromise<T> : FailablePromiseProtocol {
-    public convenience init(error: Error) {
-        self.init(FailablePromiseImpl(error: error))
+    public init() {}
+    
+    public init(error: Error) {
+        inner.resolve(value: FailableBox<T>(error: error))
     }
     
-    public init<X: FailablePromiseProtocol>(_ promise: X) where X.T == T {
-        subscribe_ = { promise.subscribe(subscriber: $0) }
-        unsubscribeAll_ = { promise.unsubscribeAll() }
+    public func subscribe(subscriber: @escaping Subscriber<FailableBox<T>>) -> Disposer {
+        return inner.promise.subscribe(subscriber: subscriber)
     }
     
-    public func subscribe(subscriber: @escaping Handler<FailableBox<T>>) -> Disposer {
-        return subscribe_(subscriber)
+    fileprivate func resolve(value: T) {
+        inner.resolve(value: FailableBox<T>(value: value))
+    }
+
+    fileprivate func resolve(error: Error) {
+        inner.resolve(value: FailableBox<T>(error: error))
     }
     
-    public func unsubscribeAll() {
-        unsubscribeAll_()
+    private let inner: PromiseBuilder<FailableBox<T>> = PromiseBuilder<FailableBox<T>>()
+}
+
+public class FailablePromiseBuilder<T> {
+    public init() {}
+
+    public func resolve(value: T) {
+        promise.resolve(value: value)
     }
     
-    private let subscribe_: (@escaping Handler<FailableBox<T>>) -> Disposer
-    private let unsubscribeAll_: () -> Void
+    public func resolve(error: Error) {
+        promise.resolve(error: error)
+    }
+    
+    public let promise: FailablePromise<T> = FailablePromise<T>()
 }

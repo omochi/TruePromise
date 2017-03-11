@@ -14,7 +14,7 @@ public protocol UnsubscribeAllEnable {
 
 public extension UnsubscribeAllEnable {
     @discardableResult
-    public func unsubscribeAll<When: Subscribable>(when: When) -> Disposer {
+    func unsubscribeAll<W: Subscribable>(when: W) -> Disposer {
         return when.subscribe { _ in
             self.unsubscribeAll()
         }

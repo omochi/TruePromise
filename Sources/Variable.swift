@@ -8,12 +8,12 @@
 
 import Foundation
 
-public class Variable<T> : ReadonlyVariable<T> {
+public class Variable<T> : Subscribable, UnsubscribeAllEnable {
     public init(value: T) {
         value_ = value
     }
     
-    public override var value: T {
+    public var value: T {
         get {
             return value_
         }
@@ -24,14 +24,20 @@ public class Variable<T> : ReadonlyVariable<T> {
         }
     }
     
-    public override func subscribe(subscriber: @escaping Handler<T>) -> Disposer {
-        return subscribers.add(subscriber: subscriber)
+    public func subscribe(subscriber: @escaping Subscriber<T>) -> Disposer {
+        return subscribers.add(subscriber)
     }
     
-    public override func unsubscribeAll() {
+    public func unsubscribeAll() {
         subscribers.clear()
     }
     
     private var value_: T
     private let subscribers: SubscriberPool<T> = SubscriberPool()
+}
+
+public extension Variable {
+    func on(subscriber: @escaping Subscriber<T>) {
+        let _ = subscribe(subscriber: subscriber)
+    }
 }

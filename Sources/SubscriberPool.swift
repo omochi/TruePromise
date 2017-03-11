@@ -11,15 +11,7 @@ import Foundation
 public class SubscriberPool<T> {
     public init() {}
     
-//    public init(_ pool: SubscriberPool<T>) {
-//        subscribers = pool.subscribers
-//    }
-//    
-//    public func copy() -> SubscriberPool<T> {
-//        return SubscriberPool<T>(self)
-//    }
-    
-    public func add(subscriber: @escaping Handler<T>) -> Disposer {
+    public func add(_ subscriber: @escaping Subscriber<T>) -> Disposer {
         let box = Box(value: subscriber)
         subscribers.append(box)
         return Disposer { [weak self, weak box] in
@@ -42,12 +34,12 @@ public class SubscriberPool<T> {
         }
     }
     
-    private func unsubscribe(box: Box<Handler<T>>) {
+    private func unsubscribe(box: Box<Subscriber<T>>) {
         guard let index = subscribers.index(where: { $0 === box }) else {
             return
         }
         subscribers.remove(at: index)
     }
     
-    private var subscribers: [Box<Handler<T>>] = []
+    private var subscribers: [Box<Subscriber<T>>] = []
 }
